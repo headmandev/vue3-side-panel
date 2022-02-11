@@ -9,7 +9,7 @@ Easy to use and flexible modal sidebar component for Vue3
 ## Features
 - Top, Right, Bottom, Left sides.
 - Slots for fixed header and footer areas.
-- Body scroll lock included thanks to [BSL]{:target="_blank"}.
+- Body scroll lock included thanks to [BSL].
 - Calculating of body height on screen resizing.
   (useful for setting "height: 100%" inside default slot)
 
