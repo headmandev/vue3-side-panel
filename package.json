@@ -5,6 +5,12 @@
   "main": "dist/vue3-side-panel.js",
   "module": "dist/vue3-side-panel.esm.js",
   "types": "dist/index.d.ts",
+  "style": "dist/vue3-side-panel.css",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/headmandev/vue3-side-panel.git"
+  },
+  "homepage": "https://vue3-side-panel.netlify.app/",
   "files": [
     "dist/*"
   ],
