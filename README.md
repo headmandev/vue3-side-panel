@@ -19,6 +19,12 @@ Easy to use and flexible modal sidebar component for Vue3
 ```sh
 npm i vue3-side-panel
 ```
+or 
+```sh
+yarn add vue3-side-panel
+```
+then add Vue component for global use
+
 `main.ts`
 ```ts
 import { createApp } from 'vue';
