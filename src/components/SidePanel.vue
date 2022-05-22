@@ -169,12 +169,13 @@ export default defineComponent({
     );
 
     watch(
-      () => props.modelValue,
-      (showed) => {
-        if (!panel.value) return;
-        if (showed) {
+      () => [props.modelValue, panel.value],
+      (p) => {
+        const [isShown, panelEl] = p as [boolean, HTMLElement | null];
+        if (!panelEl) return;
+        if (isShown) {
           if (props.lockScroll) {
-            disableBodyScroll(panel.value, { reserveScrollBarGap: true });
+            disableBodyScroll(panelEl, { reserveScrollBarGap: true });
             lockUnlockHtml(true);
           }
           calculateRightSize();
@@ -184,8 +185,8 @@ export default defineComponent({
 
         if (props.lockScroll) {
           setTimeout(() => {
-            if (!panel.value) return;
-            enableBodyScroll(panel.value);
+            if (!panelEl) return;
+            enableBodyScroll(panelEl);
             lockUnlockHtml(false);
           }, panelDuration.value);
         }
