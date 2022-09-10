@@ -25,7 +25,6 @@ export default defineComponent({
       type: String as PropType<string>,
       validator: (value: string) => ['top', 'right', 'bottom', 'left'].includes(value),
       default: 'right',
-      required: true,
     },
     zIndex: {
       type: [Number, String] as PropType<number | 'auto' | undefined>,
