@@ -26,6 +26,10 @@ export default defineComponent({
       validator: (value: string) => ['top', 'right', 'bottom', 'left'].includes(value),
       default: 'right',
     },
+    rerender: {
+      type: Boolean as PropType<boolean>,
+      default: false,
+    },
     zIndex: {
       type: [Number, String] as PropType<number | 'auto' | undefined>,
       default: 'auto',
@@ -71,6 +75,10 @@ export default defineComponent({
       type: Number as PropType<number>,
       default: 300,
     },
+    transitionName: {
+      type: String as PropType<string>,
+      default: undefined,
+    },
     headerClass: {
       type: String as PropType<string>,
       default: '',
@@ -87,7 +95,6 @@ export default defineComponent({
   emits: ['update:modelValue'],
   setup(props, { emit, attrs }) {
     let teleportContainer = undefined as HTMLDivElement | undefined;
-    const panelDuration = ref(props.panelDuration);
     const panel = ref<HTMLElement | null>(null);
     const overlay = ref<HTMLElement | null>(null);
     const footer = ref<HTMLElement | null>(null);
@@ -150,18 +157,7 @@ export default defineComponent({
     });
 
     watch(
-      () => props.side,
-      () => {
-        const savedValue = panelDuration.value;
-        panelDuration.value = 0;
-        setTimeout(() => {
-          panelDuration.value = savedValue;
-        }, 100);
-      },
-    );
-
-    watch(
-      () => [header.value, footer.value, props.height, props.width, props.side],
+      () => [header.value, footer.value, props.height, props.width, props.side, props.modelValue],
       () => {
         nextTick(() => calculateRightSize());
       },
@@ -187,7 +183,7 @@ export default defineComponent({
             if (!panelEl) return;
             enableBodyScroll(panelEl);
             lockUnlockHtml(false);
-          }, panelDuration.value);
+          }, props.panelDuration);
         }
 
         window.removeEventListener('resize', calculateRightSize);
@@ -213,7 +209,8 @@ export default defineComponent({
 
     const overlayStyles = computed(() => ({
       zIndex: zIndex.value,
-      transitionDuration: `${props.overlayDuration}ms`,
+      animationDuration: `${props.overlayDuration}ms`,
+      '--overlay-opacity': props.overlayOpacity,
       opacity: props.modelValue ? props.overlayOpacity : 0,
       backgroundColor: props.overlayColor,
       pointerEvents: !props.modelValue ? 'none' : 'all',
@@ -233,7 +230,7 @@ export default defineComponent({
 
       zIndex: zIndex.value,
       backgroundColor: props.panelColor,
-      transitionDuration: `${panelDuration.value}ms`,
+      animationDuration: `${props.panelDuration}ms`,
 
       ...Object.assign({}, attrs.style),
     }));
@@ -256,24 +253,36 @@ export default defineComponent({
 <template>
   <teleport :to="`#${idName}`">
     <div class="vsp-wrapper" :class="[modelValue && 'vsp-wrapper--active']">
-      <div
-        ref="overlay"
-        class="vsp-overlay"
-        :style="overlayStyles"
-        @click="() => (noClose ? undefined : closePanel())"
-      />
-      <div ref="panel" class="vsp" :class="[`vsp--${side}-side`, $attrs.class]" :style="panelStyles">
-        <div v-if="!!$slots.header" ref="header" :class="[headerClass, 'vsp__header']">
-          <slot name="header" :close="closePanel" />
+      <Transition name="overlay">
+        <div
+          v-show="modelValue"
+          ref="overlay"
+          class="vsp-overlay"
+          :style="overlayStyles"
+          @click="() => (noClose ? undefined : closePanel())"
+        />
+      </Transition>
+      <Transition :name="transitionName || `slide-${side}`">
+        <div
+          v-if="rerender ? modelValue : true"
+          v-show="rerender ? true : modelValue"
+          ref="panel"
+          class="vsp"
+          :class="[`vsp--${side}-side`, $attrs.class]"
+          :style="panelStyles"
+        >
+          <div v-if="!!$slots.header" ref="header" :class="[headerClass, 'vsp__header']">
+            <slot name="header" :close="closePanel" />
+          </div>
+          <div ref="body" :class="[bodyClass, 'vsp__body']" :style="{ height: `${bodyHeight}px` }">
+            <slot name="default" :close="closePanel" />
+            <SidePanelCloseButton v-if="!hideCloseBtn" @close="closePanel" />
+          </div>
+          <div v-if="!!$slots.footer" ref="footer" :class="[footerClass, 'vsp__footer']">
+            <slot name="footer" />
+          </div>
         </div>
-        <div ref="body" :class="[bodyClass, 'vsp__body']" :style="{ height: `${bodyHeight}px` }">
-          <slot name="default" :close="closePanel" />
-          <SidePanelCloseButton v-if="!hideCloseBtn" @close="closePanel" />
-        </div>
-        <div v-if="!!$slots.footer" ref="footer" :class="[footerClass, 'vsp__footer']">
-          <slot name="footer" />
-        </div>
-      </div>
+      </Transition>
     </div>
   </teleport>
 </template>
@@ -286,13 +295,10 @@ export default defineComponent({
     left: 0;
     width: 100%;
     height: 100%;
-    opacity: 0;
-    transition-property: opacity;
   }
 
   .vsp {
     position: fixed;
-    transition-property: transform;
 
     &--right-side,
     &--left-side {
@@ -303,27 +309,25 @@ export default defineComponent({
     &--right-side {
       right: 0;
       left: unset;
-      transform: translateX(100%);
     }
 
     &--left-side {
       right: unset;
       left: 0;
-      transform: translateX(-100%);
+    }
+
+    &--bottom-side,
+    &--top-side {
+      left: 0;
+      width: 100%;
     }
 
     &--bottom-side {
       bottom: 0;
-      left: 0;
-      width: 100%;
-      transform: translateY(100%);
     }
 
     &--top-side {
       top: 0;
-      left: 0;
-      width: 100%;
-      transform: translateY(-100%);
     }
 
     &__header,
@@ -337,17 +341,121 @@ export default defineComponent({
     }
   }
 
-  &--active {
-    > .vsp {
-      &--right-side,
-      &--left-side {
-        transform: translateX(0);
-      }
+  .overlay-enter-active,
+  .overlay-leave-active {
+    animation: overlay-transition;
+  }
 
-      &--top-side,
-      &--bottom-side {
-        transform: translateY(0);
-      }
+  .overlay-leave-active {
+    animation-direction: reverse;
+  }
+
+  .slide-right-enter-active,
+  .slide-right-leave-active {
+    animation: slide-right;
+  }
+
+  .slide-right-leave-active {
+    animation-direction: reverse;
+  }
+
+  .slide-left-enter-active,
+  .slide-left-leave-active {
+    animation: slide-left;
+  }
+
+  .slide-left-leave-active {
+    animation-direction: reverse;
+  }
+
+  .slide-top-enter-active,
+  .slide-top-leave-active {
+    animation: slide-left;
+  }
+
+  .slide-top-leave-active {
+    animation-direction: reverse;
+  }
+
+  .slide-top-enter-active,
+  .slide-top-leave-active {
+    animation: slide-top;
+  }
+
+  .slide-top-leave-active {
+    animation-direction: reverse;
+  }
+
+  .slide-bottom-enter-active,
+  .slide-bottom-leave-active {
+    animation: slide-bottom;
+  }
+
+  .slide-bottom-leave-active {
+    animation-direction: reverse;
+  }
+
+  @keyframes slide-right {
+    0% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-left {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-bottom {
+    0% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-top {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-top {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes overlay-transition {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: var(--overlay-opacity);
     }
   }
 }
