@@ -12,6 +12,7 @@ Easy to use and flexible modal sidebar component for Vue3
 - Body scroll lock included thanks to [BSL].
 - Calculating of body height on screen resizing.
   (useful for setting "height: 100%" inside default slot)
+- Animation Flexibility via Vue Transition support
 
 ### Installation
 
