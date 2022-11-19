@@ -1,6 +1,16 @@
 <script lang="ts">
-import { defineComponent, onBeforeMount, onUnmounted, PropType, watch, ref, computed, onMounted, nextTick } from 'vue';
-import { clearAllBodyScrollLocks, disableBodyScroll, enableBodyScroll } from 'body-scroll-lock';
+import {
+  defineComponent,
+  onBeforeMount,
+  onBeforeUnmount,
+  PropType,
+  watch,
+  ref,
+  computed,
+  onMounted,
+  nextTick,
+} from 'vue';
+import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock';
 import SidePanelCloseButton from './SidePanelCloseButton.vue';
 
 export default defineComponent({
@@ -106,6 +116,7 @@ export default defineComponent({
     const panelHeight = ref(0);
     const windowHeight = ref(0);
     const zIndex = ref<number>();
+    const isBodyAlreadyLocked = ref(false);
 
     const calculateRightSize = async () => {
       if (window?.innerHeight > 0) windowHeight.value = window.innerHeight;
@@ -147,9 +158,9 @@ export default defineComponent({
       document.body.appendChild(teleportContainer);
     });
 
-    onUnmounted(() => {
-      if (props.lockScroll) {
-        clearAllBodyScrollLocks();
+    onBeforeUnmount(() => {
+      if (props.lockScroll && panel.value && props.modelValue) {
+        enableBodyScroll(panel.value);
         lockUnlockHtml(false);
       }
       if (teleportContainer) document.body.removeChild(teleportContainer);
@@ -165,9 +176,14 @@ export default defineComponent({
 
     watch(
       () => [props.modelValue, panel.value],
-      (p) => {
-        const [isShown, panelEl] = p as [boolean, HTMLElement | null];
+      (newP, oldP) => {
+        const wasShown = oldP ? (oldP[0] as boolean) : false;
+        const [isShown, panelEl] = newP as [boolean, HTMLElement | null];
+        const isOpening = isShown;
+        const isClosing = wasShown && !isShown;
         if (!panelEl) return;
+        if (isOpening) isBodyAlreadyLocked.value = !!document.body.style.overflow;
+
         if (isShown) {
           if (props.lockScroll) {
             disableBodyScroll(panelEl, { reserveScrollBarGap: true });
@@ -178,14 +194,13 @@ export default defineComponent({
           return;
         }
 
-        if (props.lockScroll) {
-          setTimeout(() => {
-            if (!panelEl) return;
-            enableBodyScroll(panelEl);
-            lockUnlockHtml(false);
-          }, props.panelDuration);
-        }
+        if (!props.lockScroll || !isClosing || isBodyAlreadyLocked.value) return;
 
+        setTimeout(() => {
+          if (!panelEl) return;
+          enableBodyScroll(panelEl);
+          lockUnlockHtml(false);
+        }, props.panelDuration);
         window.removeEventListener('resize', calculateRightSize);
       },
       { immediate: true },

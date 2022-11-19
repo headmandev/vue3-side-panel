@@ -1,6 +1,6 @@
 {
   "name": "vue3-side-panel",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Easy to use and flexible modal sidebar component for Vue3",
   "main": "dist/vue3-side-panel.js",
   "module": "dist/vue3-side-panel.esm.js",
