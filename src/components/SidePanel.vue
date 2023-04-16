@@ -129,13 +129,17 @@ export default defineComponent({
 
     const closePanel = () => emit('update:modelValue', false);
 
-    const lockUnlockHtml = (lock: boolean) => {
-      if (!props.lockScrollHtml) return;
+    const lockUnlockBodyScroll = (elem: HTMLElement, lock: boolean) => {
       if (lock) {
-        document.documentElement.style.overflow = 'hidden';
+        setTimeout(() => {
+          disableBodyScroll(elem, {reserveScrollBarGap: true});
+          if (props.lockScrollHtml) document.documentElement.style.overflow = 'hidden';
+        }, 0);
         return;
       }
-      document.documentElement.style.removeProperty('overflow');
+
+      enableBodyScroll(elem);
+      if (props.lockScrollHtml) document.documentElement.style.removeProperty('overflow');
     };
 
     const getMaxZIndex = () =>
@@ -159,10 +163,8 @@ export default defineComponent({
     });
 
     onBeforeUnmount(() => {
-      if (props.lockScroll && panel.value && props.modelValue) {
-        enableBodyScroll(panel.value);
-        lockUnlockHtml(false);
-      }
+      const { modelValue, lockScroll } = props
+      if (lockScroll && panel.value && modelValue) lockUnlockBodyScroll(panel.value, false);
       if (teleportContainer) document.body.removeChild(teleportContainer);
       window.removeEventListener('resize', calculateRightSize);
     });
@@ -185,10 +187,7 @@ export default defineComponent({
         if (isOpening) isBodyAlreadyLocked.value = !!document.body.style.overflow;
 
         if (isShown) {
-          if (props.lockScroll) {
-            disableBodyScroll(panelEl, { reserveScrollBarGap: true });
-            lockUnlockHtml(true);
-          }
+          if (props.lockScroll) lockUnlockBodyScroll(panelEl, true);
           calculateRightSize();
           window.addEventListener('resize', calculateRightSize);
           return;
@@ -197,9 +196,7 @@ export default defineComponent({
         if (!props.lockScroll || !isClosing || isBodyAlreadyLocked.value) return;
 
         setTimeout(() => {
-          if (!panelEl) return;
-          enableBodyScroll(panelEl);
-          lockUnlockHtml(false);
+          if (panelEl) lockUnlockBodyScroll(panelEl, false);
         }, props.panelDuration);
         window.removeEventListener('resize', calculateRightSize);
       },
