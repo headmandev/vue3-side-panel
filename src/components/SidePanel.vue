@@ -102,7 +102,7 @@ export default defineComponent({
       default: '',
     },
   },
-  emits: ['update:modelValue'],
+  emits: ['update:modelValue', 'closed', 'opened'],
   setup(props, { emit, attrs }) {
     let teleportContainer = undefined as HTMLDivElement | undefined;
     const panel = ref<HTMLElement | null>(null);
@@ -274,7 +274,7 @@ export default defineComponent({
           @click="() => (noClose ? undefined : closePanel())"
         />
       </Transition>
-      <Transition :name="transitionName || `slide-${side}`">
+      <Transition :name="transitionName || `slide-${side}`" @after-enter="$emit('opened')" @after-leave="$emit('closed')">
         <div
           v-if="rerender ? modelValue : true"
           v-show="rerender ? true : modelValue"
