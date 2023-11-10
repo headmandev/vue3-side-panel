@@ -132,7 +132,7 @@ export default defineComponent({
     const lockUnlockBodyScroll = (elem: HTMLElement, lock: boolean) => {
       if (lock) {
         setTimeout(() => {
-          disableBodyScroll(elem, {reserveScrollBarGap: true});
+          disableBodyScroll(elem, { reserveScrollBarGap: true });
           if (props.lockScrollHtml) document.documentElement.style.overflow = 'hidden';
         }, 0);
         return;
@@ -163,7 +163,7 @@ export default defineComponent({
     });
 
     onBeforeUnmount(() => {
-      const { modelValue, lockScroll } = props
+      const { modelValue, lockScroll } = props;
       if (lockScroll && panel.value && modelValue) lockUnlockBodyScroll(panel.value, false);
       if (teleportContainer) document.body.removeChild(teleportContainer);
       window.removeEventListener('resize', calculateRightSize);
