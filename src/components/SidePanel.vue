@@ -86,7 +86,7 @@ export default defineComponent({
       default: 300,
     },
     transitionName: {
-      type: String as PropType<string>,
+      type: String as PropType<string | undefined>,
       default: undefined,
     },
     headerClass: {
