@@ -86,7 +86,7 @@ export default defineComponent({
       default: 300,
     },
     transitionName: {
-      type: String as PropType<string>,
+      type: String as PropType<string | undefined>,
       default: undefined,
     },
     headerClass: {
@@ -102,7 +102,7 @@ export default defineComponent({
       default: '',
     },
   },
-  emits: ['update:modelValue'],
+  emits: ['update:modelValue', 'closed', 'opened'],
   setup(props, { emit, attrs }) {
     let teleportContainer = undefined as HTMLDivElement | undefined;
     const panel = ref<HTMLElement | null>(null);
@@ -132,7 +132,7 @@ export default defineComponent({
     const lockUnlockBodyScroll = (elem: HTMLElement, lock: boolean) => {
       if (lock) {
         setTimeout(() => {
-          disableBodyScroll(elem, {reserveScrollBarGap: true});
+          disableBodyScroll(elem, { reserveScrollBarGap: true });
           if (props.lockScrollHtml) document.documentElement.style.overflow = 'hidden';
         }, 0);
         return;
@@ -163,7 +163,7 @@ export default defineComponent({
     });
 
     onBeforeUnmount(() => {
-      const { modelValue, lockScroll } = props
+      const { modelValue, lockScroll } = props;
       if (lockScroll && panel.value && modelValue) lockUnlockBodyScroll(panel.value, false);
       if (teleportContainer) document.body.removeChild(teleportContainer);
       window.removeEventListener('resize', calculateRightSize);
@@ -274,7 +274,7 @@ export default defineComponent({
           @click="() => (noClose ? undefined : closePanel())"
         />
       </Transition>
-      <Transition :name="transitionName || `slide-${side}`">
+      <Transition :name="transitionName || `slide-${side}`" @after-enter="$emit('opened')" @after-leave="$emit('closed')">
         <div
           v-if="rerender ? modelValue : true"
           v-show="rerender ? true : modelValue"

@@ -1,6 +1,6 @@
 {
   "name": "vue3-side-panel",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Easy to use and flexible modal sidebar component for Vue3",
   "main": "dist/vue3-side-panel.js",
   "module": "dist/vue3-side-panel.esm.js",
@@ -63,10 +63,10 @@
     "stylelint-config-standard-scss": "^3.0.0",
     "stylelint-scss": "^4.1.0",
     "typescript": "^4.5.4",
-    "vue": "^3.2.41"
+    "vue": "^3.3.8"
   },
   "peerDependencies": {
-    "vue": "^3.2.41"
+    "vue": "^3.3.8"
   },
   "dependencies": {
     "body-scroll-lock": "^4.0.0-beta.0"
