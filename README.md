@@ -1,6 +1,7 @@
 # 🔥 Vue3 Side Panel
 
-Easy to use and flexible modal sidebar component for Vue3
+
+Easy to use and flexible modal sidebar component for Vue3. React version - [react-slide-panel](https://github.com/headmandev/react-slide-panel)
 
 ![alt text](https://media.giphy.com/media/WHSYR86n0Tm2FGxRvr/giphy.gif)
 
